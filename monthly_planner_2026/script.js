@@ -28,6 +28,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const addUnscheduledBtn = document.getElementById('add-unscheduled-btn');
     const unscheduledList = document.getElementById('unscheduled-list');
 
+    // Bottom Panel Elements
+    const weekInputs = [
+        document.getElementById('week-1-text'),
+        document.getElementById('week-2-text'),
+        document.getElementById('week-3-text'),
+        document.getElementById('week-4-text'),
+        document.getElementById('week-5-text')
+    ];
+    const monthAchievementInput = document.getElementById('month-achievement-text');
+
     // --- Constants ---
     const MONTH_NAMES = [
         "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -64,11 +74,44 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Enter') addDailyTask();
     });
 
+    // Bottom Panel Listeners
+    weekInputs.forEach((input, index) => {
+        input.addEventListener('input', () => {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const metaKey = `meta-${year}-${month}`;
+
+            ensureMeta(metaKey);
+            tasks[metaKey].weeks[index] = input.value;
+            saveTasks();
+        });
+    });
+
+    monthAchievementInput.addEventListener('input', () => {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const metaKey = `meta-${year}-${month}`;
+
+        ensureMeta(metaKey);
+        tasks[metaKey].achievement = monthAchievementInput.value;
+        saveTasks();
+    });
+
     // --- Core Logic ---
+
+    function ensureMeta(key) {
+        if (!tasks[key]) {
+            tasks[key] = {
+                weeks: ['', '', '', '', ''],
+                achievement: ''
+            };
+        }
+    }
 
     function saveTasks() {
         localStorage.setItem('planner_tasks_2026', JSON.stringify(tasks));
-        renderCalendar(); // Re-render to update indicators
+        // We don't re-render calendar on every keystroke of the textareas to avoid losing focus
+        // But if we add a task, we do.
     }
 
     function changeMonth(delta) {
@@ -88,6 +131,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const month = currentDate.getMonth();
 
         monthYearDisplay.textContent = `${MONTH_NAMES[month]} ${year}`;
+
+        // Load Metadata for bottom panel
+        const metaKey = `meta-${year}-${month}`;
+        if (tasks[metaKey]) {
+            weekInputs.forEach((input, index) => {
+                input.value = tasks[metaKey].weeks[index] || '';
+            });
+            monthAchievementInput.value = tasks[metaKey].achievement || '';
+        } else {
+            weekInputs.forEach(input => input.value = '');
+            monthAchievementInput.value = '';
+        }
 
         // Clear grid
         calendarGrid.innerHTML = '';
@@ -220,6 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dailyTaskInput.value = '';
         saveTasks();
         renderDailyTasks();
+        renderCalendar(); // Update dots
     }
 
     function addUnscheduledTask() {
@@ -241,6 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (type === 'daily') {
             tasks[selectedDate][index].completed = !tasks[selectedDate][index].completed;
             renderDailyTasks();
+            renderCalendar(); // Update dots if needed (e.g. if we filtered only pending)
         } else {
             tasks['unscheduled'][index].completed = !tasks['unscheduled'][index].completed;
             renderUnscheduledTasks();
@@ -253,6 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (type === 'daily') {
                 tasks[selectedDate].splice(index, 1);
                 renderDailyTasks();
+                renderCalendar(); // Update dots
             } else {
                 tasks['unscheduled'].splice(index, 1);
                 renderUnscheduledTasks();
