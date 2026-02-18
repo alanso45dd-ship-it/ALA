@@ -19,7 +19,7 @@
             --accent-hover: #9965f4;
             --accent-dim: rgba(187, 134, 252, 0.1);
             --danger-color: #cf6679;
-            --grid-border: #333;
+            --grid-border: #444; /* Lighter border for visibility */
             --font-family: 'Inter', sans-serif;
             --border-radius: 8px;
             --shadow-soft: 0 4px 6px rgba(0,0,0,0.3);
@@ -158,30 +158,35 @@
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
-            border: 1px solid transparent;
+            border: 1px solid var(--grid-border); /* Visible border */
+            color: #ffffff; /* High contrast text */
         }
 
         .calendar-day:hover {
             background-color: var(--bg-tertiary);
             transform: translateY(-2px);
             box-shadow: var(--shadow-soft);
+            border-color: var(--accent-color);
         }
 
         .calendar-day.empty {
             background-color: transparent;
             cursor: default;
             box-shadow: none;
+            border: none;
         }
 
         .calendar-day.today {
             border: 1px solid var(--accent-color);
             background-color: var(--accent-dim);
+            box-shadow: 0 0 10px var(--accent-dim);
         }
 
         .day-number {
             font-weight: 600;
             margin-bottom: 8px;
             font-size: 1rem;
+            color: #ffffff;
         }
 
         .task-indicator {
@@ -249,12 +254,12 @@
             display: flex;
             flex-direction: column;
             transition: all 0.2s ease;
-            border: 1px solid transparent;
+            border: 1px solid var(--grid-border);
         }
 
         .week-box:hover, .achievement-box:hover {
             background: var(--bg-tertiary);
-            border-color: var(--grid-border);
+            border-color: #666;
         }
 
         .week-box:focus-within, .achievement-box:focus-within {

@@ -1,9 +1,32 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Safe Storage ---
+    const storage = {
+        getItem: (key) => {
+            try {
+                return localStorage.getItem(key);
+            } catch (e) {
+                console.warn('LocalStorage access denied or failed:', e);
+                return null;
+            }
+        },
+        setItem: (key, value) => {
+            try {
+                localStorage.setItem(key, value);
+            } catch (e) {
+                console.warn('LocalStorage write failed:', e);
+            }
+        }
+    };
+
     // --- State ---
     let currentDate = new Date(2026, 0, 1); // Start Jan 2026
-    let tasks = JSON.parse(localStorage.getItem('planner_tasks_2026')) || {
-        'unscheduled': []
-    };
+    let tasks;
+    try {
+        tasks = JSON.parse(storage.getItem('planner_tasks_2026')) || { 'unscheduled': [] };
+    } catch (e) {
+        tasks = { 'unscheduled': [] };
+    }
+
     if (!tasks['unscheduled']) tasks['unscheduled'] = [];
 
     let selectedDate = null; // YYYY-MM-DD
@@ -49,53 +72,65 @@ document.addEventListener('DOMContentLoaded', () => {
     renderUnscheduledTasks();
 
     // --- Event Listeners ---
-    prevBtn.addEventListener('click', () => changeMonth(-1));
-    nextBtn.addEventListener('click', () => changeMonth(1));
-    todayBtn.addEventListener('click', () => {
+    if (prevBtn) prevBtn.addEventListener('click', () => changeMonth(-1));
+    if (nextBtn) nextBtn.addEventListener('click', () => changeMonth(1));
+    if (todayBtn) todayBtn.addEventListener('click', () => {
         currentDate = new Date(); // Go to actual today
         renderCalendar();
     });
 
-    closeModalBtn.addEventListener('click', () => modal.classList.add('hidden'));
+    if (closeModalBtn) closeModalBtn.addEventListener('click', () => modal.classList.add('hidden'));
 
     // Add Task (Sidebar)
-    addUnscheduledBtn.addEventListener('click', () => {
-        addUnscheduledTask();
-    });
-    unscheduledInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') addUnscheduledTask();
-    });
+    if (addUnscheduledBtn) {
+        addUnscheduledBtn.addEventListener('click', () => {
+            addUnscheduledTask();
+        });
+    }
+    if (unscheduledInput) {
+        unscheduledInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addUnscheduledTask();
+        });
+    }
 
     // Add Task (Modal)
-    addDailyTaskBtn.addEventListener('click', () => {
-        addDailyTask();
-    });
-    dailyTaskInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') addDailyTask();
-    });
+    if (addDailyTaskBtn) {
+        addDailyTaskBtn.addEventListener('click', () => {
+            addDailyTask();
+        });
+    }
+    if (dailyTaskInput) {
+        dailyTaskInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addDailyTask();
+        });
+    }
 
     // Bottom Panel Listeners
     weekInputs.forEach((input, index) => {
-        input.addEventListener('input', () => {
+        if (input) {
+            input.addEventListener('input', () => {
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
+                const metaKey = `meta-${year}-${month}`;
+
+                ensureMeta(metaKey);
+                tasks[metaKey].weeks[index] = input.value;
+                saveTasks();
+            });
+        }
+    });
+
+    if (monthAchievementInput) {
+        monthAchievementInput.addEventListener('input', () => {
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
             const metaKey = `meta-${year}-${month}`;
 
             ensureMeta(metaKey);
-            tasks[metaKey].weeks[index] = input.value;
+            tasks[metaKey].achievement = monthAchievementInput.value;
             saveTasks();
         });
-    });
-
-    monthAchievementInput.addEventListener('input', () => {
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
-        const metaKey = `meta-${year}-${month}`;
-
-        ensureMeta(metaKey);
-        tasks[metaKey].achievement = monthAchievementInput.value;
-        saveTasks();
-    });
+    }
 
     // --- Core Logic ---
 
@@ -109,9 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function saveTasks() {
-        localStorage.setItem('planner_tasks_2026', JSON.stringify(tasks));
-        // We don't re-render calendar on every keystroke of the textareas to avoid losing focus
-        // But if we add a task, we do.
+        storage.setItem('planner_tasks_2026', JSON.stringify(tasks));
     }
 
     function changeMonth(delta) {
@@ -119,99 +152,95 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCalendar();
     }
 
-    function getFormattedDate(date) {
-        const y = date.getFullYear();
-        const m = String(date.getMonth() + 1).padStart(2, '0');
-        const d = String(date.getDate()).padStart(2, '0');
-        return `${y}-${m}-${d}`;
-    }
-
     function renderCalendar() {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
 
-        monthYearDisplay.textContent = `${MONTH_NAMES[month]} ${year}`;
+        if (monthYearDisplay) monthYearDisplay.textContent = `${MONTH_NAMES[month]} ${year}`;
 
         // Load Metadata for bottom panel
         const metaKey = `meta-${year}-${month}`;
         if (tasks[metaKey]) {
             weekInputs.forEach((input, index) => {
-                input.value = tasks[metaKey].weeks[index] || '';
+                if (input) input.value = tasks[metaKey].weeks[index] || '';
             });
-            monthAchievementInput.value = tasks[metaKey].achievement || '';
+            if (monthAchievementInput) monthAchievementInput.value = tasks[metaKey].achievement || '';
         } else {
-            weekInputs.forEach(input => input.value = '');
-            monthAchievementInput.value = '';
+            weekInputs.forEach(input => { if(input) input.value = ''; });
+            if (monthAchievementInput) monthAchievementInput.value = '';
         }
 
         // Clear grid
-        calendarGrid.innerHTML = '';
+        if (calendarGrid) {
+            calendarGrid.innerHTML = '';
 
-        // First day of month
-        const firstDay = new Date(year, month, 1);
-        const startDayIndex = firstDay.getDay(); // 0 (Sun) to 6 (Sat)
+            // First day of month
+            const firstDay = new Date(year, month, 1);
+            const startDayIndex = firstDay.getDay(); // 0 (Sun) to 6 (Sat)
 
-        // Days in month
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
+            // Days in month
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-        // Empty cells for previous month
-        for (let i = 0; i < startDayIndex; i++) {
-            const emptyCell = document.createElement('div');
-            emptyCell.classList.add('calendar-day', 'empty');
-            calendarGrid.appendChild(emptyCell);
-        }
-
-        // Days
-        const today = new Date();
-        const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
-
-        for (let day = 1; day <= daysInMonth; day++) {
-            const dayCell = document.createElement('div');
-            dayCell.classList.add('calendar-day');
-
-            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-
-            // Check if today
-            if (isCurrentMonth && day === today.getDate()) {
-                dayCell.classList.add('today');
+            // Empty cells for previous month
+            for (let i = 0; i < startDayIndex; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.classList.add('calendar-day', 'empty');
+                calendarGrid.appendChild(emptyCell);
             }
 
-            // Day Number
-            const dayNum = document.createElement('div');
-            dayNum.classList.add('day-number');
-            dayNum.textContent = day;
-            dayCell.appendChild(dayNum);
+            // Days
+            const today = new Date();
+            const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
 
-            // Indicators
-            const indicatorsContainer = document.createElement('div');
-            indicatorsContainer.classList.add('task-indicators-container');
-            if (tasks[dateStr] && tasks[dateStr].length > 0) {
-                const count = tasks[dateStr].filter(t => !t.completed).length;
-                // Show max 5 dots
-                for(let i=0; i < Math.min(count, 5); i++) {
-                    const dot = document.createElement('span');
-                    dot.classList.add('task-indicator');
-                    indicatorsContainer.appendChild(dot);
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayCell = document.createElement('div');
+                dayCell.classList.add('calendar-day');
+
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+                // Check if today
+                if (isCurrentMonth && day === today.getDate()) {
+                    dayCell.classList.add('today');
                 }
+
+                // Day Number
+                const dayNum = document.createElement('div');
+                dayNum.classList.add('day-number');
+                dayNum.textContent = day;
+                dayCell.appendChild(dayNum);
+
+                // Indicators
+                const indicatorsContainer = document.createElement('div');
+                indicatorsContainer.classList.add('task-indicators-container');
+                if (tasks[dateStr] && tasks[dateStr].length > 0) {
+                    const count = tasks[dateStr].filter(t => !t.completed).length;
+                    // Show max 5 dots
+                    for(let i=0; i < Math.min(count, 5); i++) {
+                        const dot = document.createElement('span');
+                        dot.classList.add('task-indicator');
+                        indicatorsContainer.appendChild(dot);
+                    }
+                }
+                dayCell.appendChild(indicatorsContainer);
+
+                // Click Event
+                dayCell.addEventListener('click', () => openModal(dateStr));
+
+                calendarGrid.appendChild(dayCell);
             }
-            dayCell.appendChild(indicatorsContainer);
-
-            // Click Event
-            dayCell.addEventListener('click', () => openModal(dateStr));
-
-            calendarGrid.appendChild(dayCell);
         }
     }
 
     function openModal(dateStr) {
         selectedDate = dateStr;
-        modalTitle.textContent = `Tareas: ${dateStr}`;
+        if (modalTitle) modalTitle.textContent = `Tareas: ${dateStr}`;
         renderDailyTasks();
-        modal.classList.remove('hidden');
-        dailyTaskInput.focus();
+        if (modal) modal.classList.remove('hidden');
+        if (dailyTaskInput) dailyTaskInput.focus();
     }
 
     function renderDailyTasks() {
+        if (!dailyTaskList) return;
         dailyTaskList.innerHTML = '';
         const dayTasks = tasks[selectedDate] || [];
 
@@ -222,6 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderUnscheduledTasks() {
+        if (!unscheduledList) return;
         unscheduledList.innerHTML = '';
         const unscheduled = tasks['unscheduled'] || [];
 
@@ -261,6 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function addDailyTask() {
+        if (!dailyTaskInput) return;
         const text = dailyTaskInput.value.trim();
         if (!text) return;
 
@@ -279,6 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function addUnscheduledTask() {
+        if (!unscheduledInput) return;
         const text = unscheduledInput.value.trim();
         if (!text) return;
 
@@ -297,7 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (type === 'daily') {
             tasks[selectedDate][index].completed = !tasks[selectedDate][index].completed;
             renderDailyTasks();
-            renderCalendar(); // Update dots if needed (e.g. if we filtered only pending)
+            renderCalendar(); // Update dots if needed
         } else {
             tasks['unscheduled'][index].completed = !tasks['unscheduled'][index].completed;
             renderUnscheduledTasks();
