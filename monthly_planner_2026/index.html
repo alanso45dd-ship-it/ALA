@@ -29,10 +29,12 @@
         <!-- Main Calendar Area -->
         <main class="calendar-container">
             <header class="calendar-header">
-                <button id="prev-month" aria-label="Mes anterior">&lt;</button>
+                <div class="nav-controls">
+                    <button id="prev-month" aria-label="Mes anterior">&lt;</button>
+                    <button id="next-month" aria-label="Siguiente mes">&gt;</button>
+                    <button id="today-btn">Hoy</button>
+                </div>
                 <h1 id="current-month-year">Enero 2026</h1>
-                <button id="next-month" aria-label="Siguiente mes">&gt;</button>
-                <button id="today-btn">Hoy</button>
             </header>
 
             <div class="calendar-grid-header">
@@ -52,34 +54,36 @@
             <!-- Sección de Importancias Semanales y Logro del Mes -->
             <div class="bottom-panel">
                 <div class="weekly-section">
-                    <h3>Importancias por Semana</h3>
+                    <h3><span class="icon">📅</span> Importancias por Semana</h3>
                     <div class="weekly-grid">
                         <div class="week-box">
-                            <label>Semana 1</label>
-                            <textarea id="week-1-text" placeholder="Foco principal..."></textarea>
+                            <label>S1</label>
+                            <textarea id="week-1-text" placeholder="Foco semana 1..."></textarea>
                         </div>
                         <div class="week-box">
-                            <label>Semana 2</label>
-                            <textarea id="week-2-text" placeholder="Foco principal..."></textarea>
+                            <label>S2</label>
+                            <textarea id="week-2-text" placeholder="Foco semana 2..."></textarea>
                         </div>
                         <div class="week-box">
-                            <label>Semana 3</label>
-                            <textarea id="week-3-text" placeholder="Foco principal..."></textarea>
+                            <label>S3</label>
+                            <textarea id="week-3-text" placeholder="Foco semana 3..."></textarea>
                         </div>
                         <div class="week-box">
-                            <label>Semana 4</label>
-                            <textarea id="week-4-text" placeholder="Foco principal..."></textarea>
+                            <label>S4</label>
+                            <textarea id="week-4-text" placeholder="Foco semana 4..."></textarea>
                         </div>
                         <div class="week-box">
-                            <label>Semana 5</label>
-                            <textarea id="week-5-text" placeholder="Foco principal..."></textarea>
+                            <label>S5</label>
+                            <textarea id="week-5-text" placeholder="Foco semana 5..."></textarea>
                         </div>
                     </div>
                 </div>
 
                 <div class="achievement-section">
-                    <h3>Logro del Mes</h3>
-                    <textarea id="month-achievement-text" placeholder="¿Cuál es la meta suprema este mes?"></textarea>
+                    <h3><span class="icon">🏆</span> Logro del Mes</h3>
+                    <div class="achievement-box">
+                        <textarea id="month-achievement-text" placeholder="Definir la meta suprema del mes..."></textarea>
+                    </div>
                 </div>
             </div>
         </main>
