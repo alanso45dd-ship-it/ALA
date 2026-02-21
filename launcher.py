@@ -5,6 +5,11 @@ import threading
 import time
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 import socket
+import logging
+
+# Basic logging even for production
+logging.basicConfig(filename='cotizador.log', level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 PORT = 20260
 
@@ -25,17 +30,19 @@ def run_server(server_class=HTTPServer, handler_class=SimpleHTTPRequestHandler, 
     if directory:
         os.chdir(directory)
 
+    # Try the fixed port first
     port_to_use = PORT
     if is_port_in_use(port_to_use):
-        print(f"Port {port_to_use} is in use. Trying random port...")
-        port_to_use = 0
+        logging.warning(f"Port {port_to_use} is in use. Trying random port...")
+        port_to_use = 0 # Let OS pick a random port if default is taken
 
     server_address = ('127.0.0.1', port_to_use)
     httpd = server_class(server_address, handler_class)
     return httpd
 
 def show_error(message):
-    print(message)
+    logging.error(message)
+    # Try to show a message box on Windows
     if os.name == 'nt':
         try:
             import ctypes
@@ -46,29 +53,34 @@ def show_error(message):
 def main():
     try:
         resource_path = get_resource_path()
+        logging.info(f"Resource path: {resource_path}")
 
         if not os.path.exists(resource_path):
             show_error(f"Error: Directory {resource_path} not found.")
             sys.exit(1)
 
+        # Start server
         httpd = run_server(directory=resource_path)
         port = httpd.server_port
+        logging.info(f"Server started on port {port}")
 
+        # Run server in a separate thread
         thread = threading.Thread(target=httpd.serve_forever)
         thread.daemon = True
         thread.start()
 
+        # Open the browser
         if os.path.exists('index.html'):
             url = f'http://127.0.0.1:{port}/index.html'
         else:
             url = f'http://127.0.0.1:{port}/'
 
-        print(f"Opening {url}")
         try:
             webbrowser.open(url)
         except Exception as e:
-            print(f"Could not open browser: {e}")
+            logging.error(f"Could not open browser: {e}")
 
+        # Keep running
         while True:
             time.sleep(1)
 
