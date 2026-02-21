@@ -4,6 +4,9 @@ import webbrowser
 import threading
 import time
 from http.server import HTTPServer, SimpleHTTPRequestHandler
+import socket
+
+PORT = 20260
 
 def get_resource_path():
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -14,18 +17,26 @@ def get_resource_path():
 
     return os.path.join(base_path, 'packing_list_generator')
 
+def is_port_in_use(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('127.0.0.1', port)) == 0
+
 def run_server(server_class=HTTPServer, handler_class=SimpleHTTPRequestHandler, directory=None):
     if directory:
         os.chdir(directory)
 
-    # Port 0 means select an arbitrary unused port
-    server_address = ('127.0.0.1', 0)
+    # Try the fixed port first
+    port_to_use = PORT
+    if is_port_in_use(port_to_use):
+        print(f"Port {port_to_use} is in use. Trying random port...")
+        port_to_use = 0 # Let OS pick a random port if default is taken
+
+    server_address = ('127.0.0.1', port_to_use)
     httpd = server_class(server_address, handler_class)
     return httpd
 
 def show_error(message):
     print(message)
-    # Try to show a message box on Windows
     if os.name == 'nt':
         try:
             import ctypes
@@ -56,6 +67,7 @@ def main():
         else:
             url = f'http://127.0.0.1:{port}/'
 
+        print(f"Opening {url}")
         try:
             webbrowser.open(url)
         except Exception as e:
