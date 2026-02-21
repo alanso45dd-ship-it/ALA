@@ -1,30 +1,18 @@
-# Cotizador Protemax 2026 - Guía de Instalación
+# Cotizador Protemax 2026 - Generador de Ejecutable
 
-Este proyecto contiene el código fuente del Cotizador Protemax 2026 y las herramientas necesarias para convertirlo en un archivo ejecutable (.exe) para Windows.
+Este kit te permite crear el archivo ejecutable  para Windows.
 
-## Requisitos Previos
+## Instrucciones
 
-1. **Python**: Necesitas tener Python instalado en tu computadora. Puedes descargarlo gratis desde [python.org](https://www.python.org/downloads/). Asegúrate de marcar la casilla "Add Python to PATH" durante la instalación.
+1. **Descarga**: Obtén el archivo ZIP de este proyecto.
+2. **Construye**:
+   - Descomprime el ZIP.
+   - Ejecuta  (doble clic).
+   - Espera a que termine el proceso.
+3. **Ejecuta**:
+   - Encontrarás el ejecutable en la carpeta .
+   - Copia  a donde quieras y ejecútalo.
 
-## Instrucciones para Crear el Ejecutable (.exe)
+## Nota Importante
 
-Sigue estos pasos sencillos para generar el archivo `CotizadorProtemax2026.exe`:
-
-1. **Descarga y extrae los archivos**: Descarga todos los archivos de este proyecto en una carpeta de tu computadora (por ejemplo, en el Escritorio).
-2. **Ejecuta el script de construcción**:
-   - Busca el archivo llamado `build.bat` en la carpeta.
-   - Haz doble clic sobre él.
-   - Se abrirá una ventana negra (consola) que instalará las herramientas necesarias y creará el ejecutable.
-   - Espera a que termine. Verás un mensaje que dice "Build complete".
-3. **Encuentra tu ejecutable**:
-   - Una vez finalizado, verás una nueva carpeta llamada `dist`.
-   - Dentro de esa carpeta encontrarás el archivo `CotizadorProtemax2026.exe`.
-   - ¡Listo! Ya puedes copiar ese archivo y usarlo donde quieras.
-
-## Solución de Problemas
-
-- Si `build.bat` se cierra inmediatamente, intenta abrirlo desde una consola de comandos (CMD) para ver el error.
-- Asegúrate de tener conexión a internet la primera vez para que pueda descargar `pyinstaller`.
-
----
-Generado por tu Asistente de Ingeniería de Software.
+Este software utiliza los datos proporcionados para el "Cotizador Protemax 2026" y NO el generador de packing list anterior. Se ha configurado para mantener tus datos guardados entre sesiones.
