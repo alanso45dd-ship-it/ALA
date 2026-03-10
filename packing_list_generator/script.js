@@ -16,19 +16,18 @@ const defaultItems = [
 
 let items = [...defaultItems];
 
-function renderItems() {
-    const tbody = document.getElementById('items-table-body');
-    const inputsContainer = document.getElementById('items-inputs');
+function calculateTotals() {
+    return items.reduce((acc, item) => {
+        acc.totalNeto += parseFloat(item.pesoNeto) || 0;
+        acc.totalBruto += parseFloat(item.pesoBruto) || 0;
+        acc.totalBultos += parseFloat(item.nroBulto) || 0;
+        return acc;
+    }, { totalNeto: 0, totalBruto: 0, totalBultos: 0 });
+}
 
+function renderTable(tbody) {
     tbody.innerHTML = '';
-    inputsContainer.innerHTML = '';
-
-    let totalNeto = 0;
-    let totalBruto = 0;
-    let totalBultos = 0;
-
-    items.forEach((item, index) => {
-        // Render Row in Table
+    items.forEach((item) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${item.item}</td>
@@ -43,8 +42,12 @@ function renderItems() {
             <td class="highlight-yellow">${formatNumber(item.pesoBruto)}</td>
         `;
         tbody.appendChild(tr);
+    });
+}
 
-        // Render Input Form for this Item
+function renderInputs(inputsContainer) {
+    inputsContainer.innerHTML = '';
+    items.forEach((item, index) => {
         const div = document.createElement('div');
         div.className = 'item-row-input';
         div.innerHTML = `
@@ -60,19 +63,26 @@ function renderItems() {
             <input type="number" placeholder="Peso Bruto" value="${item.pesoBruto}" onchange="updateItem(${index}, 'pesoBruto', this.value)">
         `;
         inputsContainer.appendChild(div);
-
-        // Calculate Totals
-        totalNeto += parseFloat(item.pesoNeto) || 0;
-        totalBruto += parseFloat(item.pesoBruto) || 0;
-        totalBultos += parseFloat(item.nroBulto) || 0;
     });
+}
 
-    // Update Totals Display
-    document.getElementById('total-bultos').innerText = totalBultos;
-    document.getElementById('total-neto').innerText = formatNumber(totalNeto);
-    document.getElementById('total-bruto').innerText = formatNumber(totalBruto);
-    document.getElementById('final-total-neto').innerText = formatNumber(totalNeto);
-    document.getElementById('final-total-bruto').innerText = formatNumber(totalBruto);
+function updateTotalsDisplay(totals) {
+    document.getElementById('total-bultos').innerText = totals.totalBultos;
+    document.getElementById('total-neto').innerText = formatNumber(totals.totalNeto);
+    document.getElementById('total-bruto').innerText = formatNumber(totals.totalBruto);
+    document.getElementById('final-total-neto').innerText = formatNumber(totals.totalNeto);
+    document.getElementById('final-total-bruto').innerText = formatNumber(totals.totalBruto);
+}
+
+function renderItems() {
+    const tbody = document.getElementById('items-table-body');
+    const inputsContainer = document.getElementById('items-inputs');
+
+    renderTable(tbody);
+    renderInputs(inputsContainer);
+
+    const totals = calculateTotals();
+    updateTotalsDisplay(totals);
 }
 
 function updateItem(index, field, value) {
